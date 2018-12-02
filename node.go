@@ -53,7 +53,7 @@ func (n *node) appendEntries(term uint64, leaderID string, prevLogIndex, prevLog
 	}
 
 	if len(confirmedEntries) == 0 {
-		return 0, false
+		return n.currentTerm, true
 	}
 
 	// If the index of the last committed entry from the calling node (leader) is higher
