@@ -36,7 +36,7 @@ func (n *node) appendEntries(term uint64, leaderID string, prevLogIndex, prevLog
 		return 0, false
 	}
 
-	// If some of the new entries already exist in the node, their terms need to be checked.
+	// If some of the new entries already exist in this node, their terms need to be checked.
 	// As soon as both a local and a new entry have the same index but different terms, the
 	// entry is discarded and so is the rest of the new entries.
 	confirmedEntries := make([]entry, 0, len(entries))
@@ -47,7 +47,7 @@ func (n *node) appendEntries(term uint64, leaderID string, prevLogIndex, prevLog
 		confirmedEntries = append(confirmedEntries, entries[i])
 	}
 
-	// Append the new entries to the node's log.
+	// Append the new entries to this node's log.
 	for i := range confirmedEntries {
 		n.log[confirmedEntries[i].index] = confirmedEntries[i]
 	}
@@ -73,7 +73,7 @@ func (n *node) appendEntries(term uint64, leaderID string, prevLogIndex, prevLog
 		}
 	}
 
-	// Since the calling node considers itself the leader and has entries, the node must be
+	// Since the calling node considers itself the leader and has entries, this node must be
 	// a follower.
 	n.state = stateFollower
 
@@ -86,7 +86,7 @@ func (n *node) requestVote(term uint64, candidateID string, lastLogIndex, lastLo
 		return 0, false
 	}
 
-	// The node will only responds positive to the vote request if it hasn't already voted for
+	// This node will only responds positive to the vote request if it hasn't already voted for
 	// a node or it has already voted for the calling node. Otherwise, it can't vote for more
 	// than one node.
 	// Also, a vote will only be granted if the calling node is at least up-to-date with this
