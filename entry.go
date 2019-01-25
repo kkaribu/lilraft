@@ -4,4 +4,5 @@ package lilraft
 type entry struct {
 	term  uint64
 	index uint64
+	value []byte
 }
