@@ -14,7 +14,7 @@ type Log struct {
 	state       int
 	currentTerm uint64
 	votedFor    string
-	log         map[uint64]entry
+	entries     map[uint64]entry
 
 	// Cluster log
 	lastCommitted uint64
@@ -33,7 +33,7 @@ func (l *Log) appendEntries(term uint64, leaderID string, prevLogIndex, prevLogT
 
 	// The new entries can't be appended after a certain index if what the calling node
 	// has at that index is different.
-	if entry, ok := l.log[prevLogIndex]; !ok || entry.term != prevLogTerm {
+	if entry, ok := l.entries[prevLogIndex]; !ok || entry.term != prevLogTerm {
 		return 0, false
 	}
 
@@ -42,7 +42,7 @@ func (l *Log) appendEntries(term uint64, leaderID string, prevLogIndex, prevLogT
 	// entry is discarded and so is the rest of the new entries.
 	confirmedEntries := make([]entry, 0, len(entries))
 	for i := range entries {
-		if entry, ok := l.log[entries[i].index]; ok && entry.term != entries[i].term {
+		if entry, ok := l.entries[entries[i].index]; ok && entry.term != entries[i].term {
 			break
 		}
 		confirmedEntries = append(confirmedEntries, entries[i])
@@ -50,7 +50,7 @@ func (l *Log) appendEntries(term uint64, leaderID string, prevLogIndex, prevLogT
 
 	// Append the new entries to the node's log.
 	for i := range confirmedEntries {
-		l.log[confirmedEntries[i].index] = confirmedEntries[i]
+		l.entries[confirmedEntries[i].index] = confirmedEntries[i]
 	}
 
 	if len(confirmedEntries) == 0 {
