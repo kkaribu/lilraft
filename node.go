@@ -6,7 +6,8 @@ const (
 	stateLeader
 )
 
-type node struct {
+// Log ...
+type Log struct {
 	id string
 
 	// State
@@ -24,15 +25,15 @@ type node struct {
 	matchIndex map[string]uint64
 }
 
-func (n *node) appendEntries(term uint64, leaderID string, prevLogIndex, prevLogTerm uint64, entries []entry, leaderLastCommitted uint64) (uint64, bool) {
+func (l *Log) appendEntries(term uint64, leaderID string, prevLogIndex, prevLogTerm uint64, entries []entry, leaderLastCommitted uint64) (uint64, bool) {
 	// If it's from an older term, ignore it.
-	if term < n.currentTerm {
+	if term < l.currentTerm {
 		return 0, false
 	}
 
 	// The new entries can't be appended after a certain index if what the calling node
 	// has at that index is different.
-	if entry, ok := n.log[prevLogIndex]; !ok || entry.term != prevLogTerm {
+	if entry, ok := l.log[prevLogIndex]; !ok || entry.term != prevLogTerm {
 		return 0, false
 	}
 
@@ -41,7 +42,7 @@ func (n *node) appendEntries(term uint64, leaderID string, prevLogIndex, prevLog
 	// entry is discarded and so is the rest of the new entries.
 	confirmedEntries := make([]entry, 0, len(entries))
 	for i := range entries {
-		if entry, ok := n.log[entries[i].index]; ok && entry.term != entries[i].term {
+		if entry, ok := l.log[entries[i].index]; ok && entry.term != entries[i].term {
 			break
 		}
 		confirmedEntries = append(confirmedEntries, entries[i])
@@ -49,11 +50,11 @@ func (n *node) appendEntries(term uint64, leaderID string, prevLogIndex, prevLog
 
 	// Append the new entries to the node's log.
 	for i := range confirmedEntries {
-		n.log[confirmedEntries[i].index] = confirmedEntries[i]
+		l.log[confirmedEntries[i].index] = confirmedEntries[i]
 	}
 
 	if len(confirmedEntries) == 0 {
-		return n.currentTerm, true
+		return l.currentTerm, true
 	}
 
 	// If the index of the last committed entry from the calling node (leader) is higher
@@ -65,24 +66,24 @@ func (n *node) appendEntries(term uint64, leaderID string, prevLogIndex, prevLog
 	// highest index in its committed log. If this node's highest index is smaller, it
 	// will have to be increased. It can't just be set to leaderLastCommitted, because maybe
 	// some of the new entries from the leader haven't been committed yet.
-	if n.lastCommitted < leaderLastCommitted {
+	if l.lastCommitted < leaderLastCommitted {
 		if leaderLastCommitted < confirmedEntries[len(confirmedEntries)-1].index {
-			n.lastCommitted = leaderLastCommitted
+			l.lastCommitted = leaderLastCommitted
 		} else {
-			n.lastCommitted = confirmedEntries[len(confirmedEntries)-1].index
+			l.lastCommitted = confirmedEntries[len(confirmedEntries)-1].index
 		}
 	}
 
 	// Since the calling node considers itself the leader and has entries, the node must be
 	// a follower.
-	n.state = stateFollower
+	l.state = stateFollower
 
-	return n.currentTerm, true
+	return l.currentTerm, true
 }
 
-func (n *node) requestVote(term uint64, candidateID string, lastLogIndex, lastLogTerm uint64) (uint64, bool) {
+func (l *Log) requestVote(term uint64, candidateID string, lastLogIndex, lastLogTerm uint64) (uint64, bool) {
 	// If it's from an older term, ignore it.
-	if term < n.currentTerm {
+	if term < l.currentTerm {
 		return 0, false
 	}
 
@@ -92,15 +93,15 @@ func (n *node) requestVote(term uint64, candidateID string, lastLogIndex, lastLo
 	// Also, a vote will only be granted if the calling node is at least up-to-date with this
 	// node because if it is not, then for sure the calling node doesn't have what it takes to
 	// be a leader.
-	if n.votedFor == "" || n.votedFor == candidateID {
-		if lastLogIndex >= n.lastCommitted {
-			return n.currentTerm, true
+	if l.votedFor == "" || l.votedFor == candidateID {
+		if lastLogIndex >= l.lastCommitted {
+			return l.currentTerm, true
 		}
 	}
 
 	return 0, false
 }
 
-func (n *node) isLeader() bool {
-	return n.state == stateLeader
+func (l *Log) isLeader() bool {
+	return l.state == stateLeader
 }
