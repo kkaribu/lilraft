@@ -25,6 +25,17 @@ type Log struct {
 	matchIndex map[string]uint64
 }
 
+// Append ...
+func (l *Log) Append(value []byte) error {
+	l.lastCommitted++
+	l.entries[l.lastCommitted] = entry{
+		term:  l.currentTerm,
+		index: l.lastCommitted,
+		value: value,
+	}
+	return nil
+}
+
 func (l *Log) appendEntries(term uint64, leaderID string, prevLogIndex, prevLogTerm uint64, entries []entry, leaderLastCommitted uint64) (uint64, bool) {
 	// If it's from an older term, ignore it.
 	if term < l.currentTerm {
