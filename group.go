@@ -4,15 +4,15 @@ import "fmt"
 
 // Group ...
 type Group struct {
+	Logs   map[string]*Log
 	Config Config
 
 	inbox chan message
-	nodes map[string]*Log
 }
 
 // Run ...
 func (g *Group) Run() {
-	g.nodes = map[string]*Log{
+	g.Logs = map[string]*Log{
 		"abc123": {
 			id: "abc123",
 		},
@@ -20,8 +20,8 @@ func (g *Group) Run() {
 
 	go func() {}()
 
-	for id := range g.nodes {
-		fmt.Printf("State of %s: %d\n", g.nodes[id].id, g.nodes[id].state)
+	for id := range g.Logs {
+		fmt.Printf("State of %s: %d\n", g.Logs[id].id, g.Logs[id].state)
 	}
 }
 
