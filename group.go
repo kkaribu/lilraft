@@ -7,13 +7,13 @@ type Group struct {
 	Config Config
 
 	inbox chan message
-	nodes map[string]*node
+	nodes map[string]*Log
 }
 
 // Run ...
 func (g *Group) Run() {
-	g.nodes = map[string]*node{
-		"abc123": &node{
+	g.nodes = map[string]*Log{
+		"abc123": {
 			id: "abc123",
 		},
 	}
