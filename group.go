@@ -4,6 +4,9 @@ import "fmt"
 
 // Group ...
 type Group struct {
+	Config Config
+
+	inbox chan message
 	nodes map[string]*node
 }
 
@@ -15,9 +18,13 @@ func (g *Group) Run() {
 		},
 	}
 
+	go func() {}()
+
 	for id := range g.nodes {
 		fmt.Printf("State of %s: %d\n", g.nodes[id].id, g.nodes[id].state)
 	}
 }
 
-func (g *Group) send() {}
+func (g *Group) send(to string, msg message) error {
+	return nil
+}
