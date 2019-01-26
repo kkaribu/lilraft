@@ -25,6 +25,11 @@ type Log struct {
 	matchIndex map[string]uint64
 }
 
+// Version ...
+func (l *Log) Version() uint64 {
+	return l.lastCommitted
+}
+
 // Append ...
 func (l *Log) Append(value []byte) error {
 	l.lastCommitted++
