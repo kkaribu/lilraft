@@ -27,7 +27,7 @@ type Log struct {
 
 // Version ...
 func (l *Log) Version() uint64 {
-	return l.lastCommitted
+	return l.lastApplied
 }
 
 // Append ...
