@@ -1,1 +1,1 @@
-module github.com/kkaribu/lilraft
+module github.com/mfcochauxlaberge/lilraft
