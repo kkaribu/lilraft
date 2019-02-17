@@ -1,6 +1,9 @@
 package lilraft
 
-import "errors"
+import (
+	"errors"
+	"sync"
+)
 
 const (
 	stateFollower = iota
@@ -25,6 +28,8 @@ type Log struct {
 	// Current term
 	nextIndex  map[string]uint64
 	matchIndex map[string]uint64
+
+	sync.Mutex
 }
 
 // Version ...
@@ -34,6 +39,9 @@ func (l *Log) Version() uint64 {
 
 // giveMsg ...
 func (l *Log) giveMsg(msg Msg) (uint64, bool, error) {
+	l.Lock()
+	defer l.Unlock()
+
 	switch m := msg.(type) {
 	case MsgAppendEntries:
 		term, ok := l.appendEntries(m)
