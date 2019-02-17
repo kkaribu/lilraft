@@ -1,5 +1,7 @@
 package lilraft
 
+import "errors"
+
 const (
 	stateFollower = iota
 	stateCandidate
@@ -30,6 +32,20 @@ func (l *Log) Version() uint64 {
 	return l.lastApplied
 }
 
+// giveMsg ...
+func (l *Log) giveMsg(msg Msg) (uint64, bool, error) {
+	switch m := msg.(type) {
+	case MsgAppendEntries:
+		term, ok := l.appendEntries(m)
+		return term, ok, nil
+	case MsgRequestVote:
+		term, ok := l.requestVote(m)
+		return term, ok, nil
+	default:
+		return 0, false, errors.New("lilraft: invalid message")
+	}
+}
+
 // Append ...
 func (l *Log) Append(value []byte) error {
 	l.lastCommitted++
@@ -41,27 +57,27 @@ func (l *Log) Append(value []byte) error {
 	return nil
 }
 
-func (l *Log) appendEntries(term uint64, leaderID string, prevLogIndex, prevLogTerm uint64, entries []entry, leaderLastCommitted uint64) (uint64, bool) {
+func (l *Log) appendEntries(m MsgAppendEntries) (uint64, bool) {
 	// If it's from an older term, ignore it.
-	if term < l.currentTerm {
+	if m.term < l.currentTerm {
 		return 0, false
 	}
 
 	// The new entries can't be appended after a certain index if what the calling node
 	// has at that index is different.
-	if entry, ok := l.entries[prevLogIndex]; !ok || entry.term != prevLogTerm {
+	if entry, ok := l.entries[m.prevLogIndex]; !ok || entry.term != m.prevLogTerm {
 		return 0, false
 	}
 
 	// If some of the new entries already exist in the node, their terms need to be checked.
 	// As soon as both a local and a new entry have the same index but different terms, the
 	// entry is discarded and so is the rest of the new entries.
-	confirmedEntries := make([]entry, 0, len(entries))
-	for i := range entries {
-		if entry, ok := l.entries[entries[i].index]; ok && entry.term != entries[i].term {
+	confirmedEntries := make([]entry, 0, len(m.entries))
+	for i := range m.entries {
+		if entry, ok := l.entries[m.entries[i].index]; ok && entry.term != m.entries[i].term {
 			break
 		}
-		confirmedEntries = append(confirmedEntries, entries[i])
+		confirmedEntries = append(confirmedEntries, m.entries[i])
 	}
 
 	// Append the new entries to the node's log.
@@ -82,9 +98,9 @@ func (l *Log) appendEntries(term uint64, leaderID string, prevLogIndex, prevLogT
 	// highest index in its committed log. If this node's highest index is smaller, it
 	// will have to be increased. It can't just be set to leaderLastCommitted, because maybe
 	// some of the new entries from the leader haven't been committed yet.
-	if l.lastCommitted < leaderLastCommitted {
-		if leaderLastCommitted < confirmedEntries[len(confirmedEntries)-1].index {
-			l.lastCommitted = leaderLastCommitted
+	if l.lastCommitted < m.leaderLastCommitted {
+		if m.leaderLastCommitted < confirmedEntries[len(confirmedEntries)-1].index {
+			l.lastCommitted = m.leaderLastCommitted
 		} else {
 			l.lastCommitted = confirmedEntries[len(confirmedEntries)-1].index
 		}
@@ -97,9 +113,9 @@ func (l *Log) appendEntries(term uint64, leaderID string, prevLogIndex, prevLogT
 	return l.currentTerm, true
 }
 
-func (l *Log) requestVote(term uint64, candidateID string, lastLogIndex, lastLogTerm uint64) (uint64, bool) {
+func (l *Log) requestVote(m MsgRequestVote) (uint64, bool) {
 	// If it's from an older term, ignore it.
-	if term < l.currentTerm {
+	if m.term < l.currentTerm {
 		return 0, false
 	}
 
@@ -109,8 +125,8 @@ func (l *Log) requestVote(term uint64, candidateID string, lastLogIndex, lastLog
 	// Also, a vote will only be granted if the calling node is at least up-to-date with this
 	// node because if it is not, then for sure the calling node doesn't have what it takes to
 	// be a leader.
-	if l.votedFor == "" || l.votedFor == candidateID {
-		if lastLogIndex >= l.lastCommitted {
+	if l.votedFor == "" || l.votedFor == m.candidateID {
+		if m.lastLogIndex >= l.lastCommitted {
 			return l.currentTerm, true
 		}
 	}
