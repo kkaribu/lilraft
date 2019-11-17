@@ -1,5 +1,3 @@
-# lilraft
-
 <div align="center" style="text-align: center;">
   <img src="assets/logo.png" height="120">
   <br>
@@ -10,6 +8,8 @@
     <img src="https://godoc.org/github.com/golang/gddo?status.svg">
   </a>
 </div>
+
+# lilraft
 
 lilraft is an implementation of the [Raft consesus algorithm](https://raft.github.io/).
 
