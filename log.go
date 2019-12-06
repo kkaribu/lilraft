@@ -38,6 +38,7 @@ func (l *Log) Append(value []byte) error {
 		index: l.lastCommitted,
 		value: value,
 	}
+
 	return nil
 }
 
@@ -57,10 +58,12 @@ func (l *Log) appendEntries(term uint64, leaderID string, prevLogIndex, prevLogT
 	// As soon as both a local and a new entry have the same index but different terms, the
 	// entry is discarded and so is the rest of the new entries.
 	confirmedEntries := make([]entry, 0, len(entries))
+
 	for i := range entries {
 		if entry, ok := l.entries[entries[i].index]; ok && entry.term != entries[i].term {
 			break
 		}
+
 		confirmedEntries = append(confirmedEntries, entries[i])
 	}
 
