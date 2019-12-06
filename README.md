@@ -7,6 +7,10 @@
   <a href="https://godoc.org/github.com/mfcochauxlaberge/lilraft">
     <img src="https://godoc.org/github.com/golang/gddo?status.svg">
   </a>
+  <br>
+  <a href="https://github.com/mfcochauxlaberge/jsonapi/blob/master/go.mod">
+    <img src="https://img.shields.io/badge/go%20version-1.11%2B-%2300acd7">
+  </a>
 </div>
 
 # lilraft
